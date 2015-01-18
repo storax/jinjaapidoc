@@ -271,12 +271,4 @@ autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance']
 
 
 # -- Intersphinx Config ---------------------------------------------------
-intersphinx_mapping = {'python': ('http://docs.python.org/2.7', None),
-                       'pyside': ('https://deptinfo-ensip.univ-poitiers.fr/ENS/pyside-docs/', None)}
-
-
-# if sphinx-build is running, do updatedoc to have a fresh apidoc
-if 'sphinx-build' in sys.argv[0].lower():
-    sys.path.append(os.path.dirname(__file__))
-    import updatedoc
-    updatedoc.main([])
+intersphinx_mapping = {'python': ('http://docs.python.org/2.7', None),}

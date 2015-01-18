@@ -32,4 +32,4 @@ The full documentation is at http://jinjaapidoc.rtfd.org.
 Features
 --------
 
-* TODO
+* jinjaapidoc is a tool for automatic generation of Sphinx sources that, using the `jinja2 <http://jinja.pocoo.org/docs/dev/>`_ template rendering engine, document a whole package in the style of other automatic API documentation tools. It is based of the builtin `sphinx apidoc <http://sphinx-doc.org/man/sphinx-apidoc.html>`_

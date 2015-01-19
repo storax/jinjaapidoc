@@ -1,25 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-    this is a modification of sphinx.apidoc by David.Zuber
-    It uses jinja templates to render the rst files.
+"""This is a modification of sphinx.apidoc by David.Zuber
+It uses jinja templates to render the rst files.
 
-    sphinx.apidoc
-    ~~~~~~~~~~~~~
+Parses a directory tree looking for Python modules and packages and creates
+ReST files appropriately to create code documentation with Sphinx.
 
-    Parses a directory tree looking for Python modules and packages and creates
-    ReST files appropriately to create code documentation with Sphinx.
-
-    This is derived from the "sphinx-autopackage" script, which is:
-    Copyright 2008 Societe des arts technologiques (SAT),
-    http://www.sat.qc.ca/
-
-    :copyright: Copyright 2007-2014 by the Sphinx team, see AUTHORS.
-    :license: BSD, see LICENSE for details.
+This is derived form the "sphinx-apidoc" script, which is:
+Copyright 2007-2014 by the Sphinx team, see http://sphinx-doc.org/latest/authors.html.
 """
 import os
 import sys
-import optparse
+import argparse
 import inspect
 import pkgutil
 import logging
@@ -375,108 +367,61 @@ def setup_parser():
     :rtype: :class:`optparse.OptionParser`
     :raises: None
     """
-    parser = optparse.OptionParser(
-        usage="""\
-usage: %prog [options] -o <output_path> <module_path> [exclude_path, ...]
-
-Look recursively in <module_path> for Python modules and packages and create
+    description="""Look recursively in <src> for Python modules and packages and create
 one reST file with automodule directives per package in the <output_path>.
 
 The <exclude_path>s can be files and/or directories that will be excluded
 from generation.
 
-Note: By default this script will not overwrite already created files.""")
-
-    parser.add_option('-o', '--output-dir', action='store', dest='destdir',
-                      help='Directory to place all output', default='')
-    parser.add_option('-d', '--maxdepth', action='store', dest='maxdepth',
-                      help='Maximum depth of submodules to show in the TOC '
-                      '(default: 4)', type='int', default=4)
-    parser.add_option('-f', '--force', action='store_true', dest='force',
-                      help='Overwrite existing files')
-    parser.add_option('-l', '--follow-links', action='store_true',
-                      dest='followlinks', default=False,
-                      help='Follow symbolic links. Powerful when combined '
-                      'with collective.recipe.omelette.')
-    parser.add_option('-n', '--dry-run', action='store_true', dest='dryrun',
-                      help='Run the script without creating files')
-    parser.add_option('-P', '--private', action='store_true',
-                      dest='includeprivate',
-                      help='Include "_private" modules')
-    parser.add_option('-s', '--suffix', action='store', dest='suffix',
-                      help='file suffix (default: rst)', default='rst')
-    parser.add_option('-F', '--full', action='store_true', dest='full',
-                      help='Generate a full project with sphinx-quickstart')
-    parser.add_option('-H', '--doc-project', action='store', dest='header',
-                      help='Project name (default: root module name)')
-    parser.add_option('-A', '--doc-author', action='store', dest='author',
-                      type='str',
-                      help='Project author(s), used when --full is given')
-    parser.add_option('-V', '--doc-version', action='store', dest='version',
-                      help='Project version, used when --full is given')
-    parser.add_option('-R', '--doc-release', action='store', dest='release',
-                      help='Project release, used when --full is given, '
-                      'defaults to --doc-version')
+Note: By default this script will not overwrite already created files."""
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('src', help='Path to the source directory')
+    parser.add_argument('out', action='store', dest='destdir',
+                        help='Directory to place all output')
+    parser.add_argument('exclude_paths', help='Paths to exclude', nargs='*')
+    parser.add_argument('-d', '--maxdepth', action='store', dest='maxdepth',
+                        help='Maximum depth of submodules to show in the TOC'
+                        '(default: 4)', type='int', default=4)
+    parser.add_argument('-f', '--force', action='store_true', dest='force',
+                        help='Overwrite existing files')
+    parser.add_argument('-l', '--follow-links', action='store_true',
+                        dest='followlinks', default=False,
+                        help='Follow symbolic links. Powerful when combined '
+                        'with collective.recipe.omelette.')
+    parser.add_argument('-n', '--dry-run', action='store_true', dest='dryrun',
+                        help='Run the script without creating files')
+    parser.add_argument('-P', '--private', action='store_true',
+                        dest='includeprivate',
+                        help='Include "_private" modules')
+    parser.add_argument('-s', '--suffix', action='store', dest='suffix',
+                        help='file suffix (default: rst)', default='rst')
     return parser
 
 
-def main(argv=sys.argv):
+def main(argv=None):
     """Parse and check the command line arguments."""
+    if argv is None:
+        argv = sys.argv[1:]
     parser = setup_parser()
 
-    (opts, args) = parser.parse_args(argv[1:])
+    args = parser.parse_args(argv[1:])
 
-    if not args:
-        parser.error('A package path is required.')
-
-    rootpath, excludes = args[0], args[1:]
-    if not opts.destdir:
-        parser.error('An output directory is required.')
-    if opts.header is None:
-        opts.header = path.normpath(rootpath).split(path.sep)[-1]
-    if opts.suffix.startswith('.'):
-        opts.suffix = opts.suffix[1:]
+    rootpath = args.src
+    excludes = args.exclude_paths
+    if args.header is None:
+        args.header = path.normpath(rootpath).split(path.sep)[-1]
+    if args.suffix.startswith('.'):
+        args.suffix = args.suffix[1:]
     if not path.isdir(rootpath):
-        print >>sys.stderr, '%s is not a directory.' % rootpath
-        sys.exit(1)
-    if not path.isdir(opts.destdir):
-        if not opts.dryrun:
-            os.makedirs(opts.destdir)
+        raise OSError("%s is not a directory." % rootpath)
+    if not path.isdir(args.destdir):
+        if not args.dryrun:
+            os.makedirs(args.destdir)
     rootpath = path.normpath(path.abspath(rootpath))
     excludes = normalize_excludes(rootpath, excludes)
     loader = make_loader()
     env = make_environment(loader)
-    modules = recurse_tree(env, rootpath, excludes, opts)
-    if opts.full:
-        from sphinx import quickstart as qs
-        modules.sort()
-        prev_module = ''
-        text = ''
-        for module in modules:
-            if module.startswith(prev_module + '.'):
-                continue
-            prev_module = module
-            text += '   %s\n' % module
-        d = dict(
-            path = opts.destdir,
-            sep  = False,
-            dot  = '_',
-            project = opts.header,
-            author = opts.author or 'Author',
-            version = opts.version or '',
-            release = opts.release or opts.version or '',
-            suffix = '.' + opts.suffix,
-            master = 'index',
-            epub = True,
-            ext_autodoc = True,
-            ext_viewcode = True,
-            makefile = True,
-            batchfile = True,
-            mastertocmaxdepth = opts.maxdepth,
-            mastertoctree = text,
-        )
-        if not opts.dryrun:
-            qs.generate(d, silent=True, overwrite=opts.force)
+    recurse_tree(env, rootpath, excludes, args)
 
 
 if __name__ == "__main__":

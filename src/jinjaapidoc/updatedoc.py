@@ -50,7 +50,7 @@ def setup_argparse():
                         is used for the remaining source dirs.\
                         WARNING: the output directories are emptied by default. See -nod.\
                         Default is \'%s\'.' % ', '.join(odefault))
-    gadefault = ['-T', '-f', '-e', '-o']
+    gadefault = ['-T', '-f', '-e']
     parser.add_argument('-ga', '--gendocargs', nargs='*', default=gadefault,
                         help="list of arguments to pass to gendoc. use -gh for info.\
                         Default is \'%s\'" % ', '.join(gadefault))
@@ -97,9 +97,8 @@ def run_gendoc(source, dest, args):
     :rtype: None
     :raises: SystemExit
     """
-    args.insert(0, 'gendoc.py')
-    args.append(dest)
-    args.append(source)
+    args.insert(0, dest)
+    args.insert(0, source)
     log.debug("Running gendoc.main with: %s", args)
     gendoc.main(args)
 

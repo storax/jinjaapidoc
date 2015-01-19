@@ -30,12 +30,6 @@ from sphinx.util.osutil import walk
 from sphinx.ext import autosummary
 
 log = logging.getLogger(__name__)
-handler = logging.StreamHandler(sys.stdout)
-fmt = "%(levelname)-8s:%(name)s:%(lineno)s: %(message)s"
-formatter = logging.Formatter(fmt)
-handler.setFormatter(formatter)
-log.addHandler(handler)
-log.setLevel(logging.INFO)
 
 INITPY = '__init__.py'
 PY_SUFFIXES = set(['.py', '.pyx'])

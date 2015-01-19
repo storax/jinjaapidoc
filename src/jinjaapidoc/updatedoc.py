@@ -10,11 +10,14 @@ This is automatically executed when building with sphinx. Check the bottom of do
 """
 import argparse
 import os
+import logging
 import shutil
 import sys
 
 import gendoc
 
+
+log = logging.getLogger(__name__)
 thisdir = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -25,7 +28,7 @@ def setup_argparse():
     :rtype: :class:`argparse.ArgumentParser`
     :raises: None
     """
-
+    log.debug("Setting up argparser.")
     parser = argparse.ArgumentParser(
         description="Builds the documentaion. First it runs gendoc to create rst files\
         for the source code. Then it runs sphinx make.\
@@ -72,12 +75,12 @@ def prepare_dir(directory, delete=True):
     if os.path.exists(directory):
         if delete:
             assert directory != thisdir, 'Trying to delete docs! Specify other output dir!'
-            print 'Deleting %s' % directory
+            log.debug("Deleting %s", directory)
             shutil.rmtree(directory)
-            print 'Creating %s' % directory
+            log.debug("Creating %s", directory)
             os.mkdir(directory)
     else:
-        print 'Creating %s' % directory
+        log.debug("Creating %s", directory)
         os.mkdir(directory)
 
 
@@ -97,7 +100,7 @@ def run_gendoc(source, dest, args):
     args.insert(0, 'gendoc.py')
     args.append(dest)
     args.append(source)
-    print 'Running gendoc.main with: %s' % args
+    log.debug("Running gendoc.main with: %s", args)
     gendoc.main(args)
 
 
@@ -117,12 +120,9 @@ def main(argv=sys.argv[1:]):
         genparser = gendoc.setup_parser()
         genparser.print_help()
         sys.exit(0)
-    print 'Preparing output directories'
-    print '='*80
+    log.debug("Preparing output directories")
     for odir in args.output:
         prepare_dir(odir, not args.nodelete)
-    print '\nRunning gendoc'
-    print '='*80
     for i, idir in enumerate(args.input):
         if i >= len(args.output):
             odir = args.output[-1]

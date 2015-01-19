@@ -33,31 +33,25 @@ def setup_argparse():
         description="Builds the documentaion. First it runs gendoc to create rst files\
         for the source code. Then it runs sphinx make.\
         WARNING: this will delete the contents of the output dirs. You can use -nod.")
-    ipath = os.path.join(thisdir, '../src')
-    ipath = os.path.abspath(ipath)
-    idefault = [ipath]
-    parser.add_argument('-i', '--input', nargs='+', default=idefault,
-                        help='list of input directories. gendoc is called for every\
-                        source dir.\
-                        Default is \'%s\'.' % ', '.join(idefault))
-    opath = os.path.join(thisdir, 'reference')
-    opath = os.path.abspath(opath)
-    odefault = [opath]
-    parser.add_argument('-o', '--output', nargs='+', default=odefault,
-                        help='list of output directories. if you have multiple source\
-                        directories, the corresponding output directorie is used.\
-                        if there are less dirs than for source, the last output dir\
-                        is used for the remaining source dirs.\
-                        WARNING: the output directories are emptied by default. See -nod.\
-                        Default is \'%s\'.' % ', '.join(odefault))
-    gadefault = ['-T', '-f', '-e']
-    parser.add_argument('-ga', '--gendocargs', nargs='*', default=gadefault,
-                        help="list of arguments to pass to gendoc. use -gh for info.\
-                        Default is \'%s\'" % ', '.join(gadefault))
+    parser.add_argument('src', help='Path to the source directory')
+    parser.add_argument('out', action='store', dest='destdir',
+                        help='Directory to place all output')
+    parser.add_argument('exclude_paths', help='Paths to exclude', nargs='*')
+    parser.add_argument('-f', '--force', action='store_true', dest='force',
+                        help='Overwrite existing files')
+    parser.add_argument('-l', '--follow-links', action='store_true',
+                        dest='followlinks', default=False,
+                        help='Follow symbolic links. Powerful when combined '
+                        'with collective.recipe.omelette.')
+    parser.add_argument('-n', '--dry-run', action='store_true', dest='dryrun',
+                        help='Run the script without creating files')
+    parser.add_argument('-P', '--private', action='store_true',
+                        dest='includeprivate',
+                        help='Include "_private" modules')
+    parser.add_argument('-s', '--suffix', action='store', dest='suffix',
+                        help='file suffix (default: rst)', default='rst')
     parser.add_argument('-nod', '--nodelete', action='store_true',
                         help='Do not empty the output directories first.')
-    parser.add_argument('-gh', '--gendochelp', action='store_true',
-                        help='print the help for gendoc and exit')
     return parser
 
 
@@ -84,26 +78,7 @@ def prepare_dir(directory, delete=True):
         os.mkdir(directory)
 
 
-def run_gendoc(source, dest, args):
-    """Starts gendoc which reads source and creates rst files in dest with the given args.
-
-    :param source: The python source directory for gendoc. Can be a relative path.
-    :type source: str
-    :param dest: The destination for the rst files. Can be a relative path.
-    :type dest: str
-    :param args: Arguments for gendoc. See gendoc for more information.
-    :type args: list
-    :returns: None
-    :rtype: None
-    :raises: SystemExit
-    """
-    args.insert(0, dest)
-    args.insert(0, source)
-    log.debug("Running gendoc.main with: %s", args)
-    gendoc.main(args)
-
-
-def main(argv=sys.argv[1:]):
+def main(argv=None):
     """Parse commandline arguments and run the tool
 
     :param argv: the commandline arguments.
@@ -112,22 +87,19 @@ def main(argv=sys.argv[1:]):
     :rtype: None
     :raises: None
     """
+    if argv is None:
+        argv = sys.argv[1:]
     parser = setup_argparse()
     args = parser.parse_args(argv)
-    if args.gendochelp:
-        sys.argv[0] = 'gendoc.py'
-        genparser = gendoc.setup_parser()
-        genparser.print_help()
-        sys.exit(0)
     log.debug("Preparing output directories")
-    for odir in args.output:
-        prepare_dir(odir, not args.nodelete)
-    for i, idir in enumerate(args.input):
-        if i >= len(args.output):
-            odir = args.output[-1]
-        else:
-            odir = args.output[i]
-        run_gendoc(idir, odir, args.gendocargs)
+    prepare_dir(args.destdir, not args.nodelete)
+    gendoc.generate(args.src, args.destdir,
+                    exclude=args.exclude_paths,
+                    force=args.force,
+                    followlinks = args.followlinks,
+                    dry=args.dryrun,
+                    private=args.includeprivate,
+                    suffix=args.suffix)
 
 if __name__ == '__main__':
     main()

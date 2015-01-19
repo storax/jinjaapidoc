@@ -10,12 +10,9 @@ This is derived form the "sphinx-apidoc" script, which is:
 Copyright 2007-2014 by the Sphinx team, see http://sphinx-doc.org/latest/authors.html.
 """
 import os
-import sys
-import argparse
 import inspect
 import pkgutil
 import logging
-from os import path
 
 import jinja2
 from sphinx.util.osutil import walk
@@ -74,13 +71,13 @@ def makename(package, module):
     return name
 
 
-def write_file(name, text, opts):
+def write_file(name, text, dest, suffix, dryrun, force):
     """Write the output file for module/package <name>."""
-    fname = path.join(opts.destdir, '%s.%s' % (name, opts.suffix))
-    if opts.dryrun:
+    fname = os.path.join(dest, '%s.%s' % (name, suffix))
+    if dryrun:
         log.info('Would create file %s.', fname)
         return
-    if not opts.force and path.isfile(fname):
+    if not force and os.path.isfile(fname):
         log.info('File %s already exists, skipping.', fname)
     else:
         log.info('Creating file %s.' % fname)
@@ -245,7 +242,7 @@ def get_context(package, module, fullname):
     return var
 
 
-def create_module_file(env, package, module, opts):
+def create_module_file(env, package, module, dest, suffix, dryrun, force):
     """Build the text of the file and write the file."""
     log.debug('Create module file: package %s, module %s', package, module)
     template_file = 'gendoc_module.rst'
@@ -254,10 +251,10 @@ def create_module_file(env, package, module, opts):
     var = get_context(package, module, fn)
     var['ispkg'] = False
     rendered = template.render(var)
-    write_file(makename(package, module), rendered, opts)
+    write_file(makename(package, module), rendered, dest, suffix, dryrun, force)
 
 
-def create_package_file(env, root, master_package, subroot, py_files, opts, subs):
+def create_package_file(env, root, master_package, subroot, py_files, subs, private, dest, suffix, dryrun, force):
     """Build the text of the file and write the file."""
     log.debug('Create package file: root %s, masterpackage %s, subroot %s', root, master_package, subroot)
     template_file = 'gendoc_package.rst'
@@ -266,85 +263,101 @@ def create_package_file(env, root, master_package, subroot, py_files, opts, subs
     var = get_context(master_package, subroot, fn)
     var['ispkg'] = True
     for submod in var['submods']:
-        if shall_skip(submod, opts):
+        if shall_skip(submod, private):
             continue
-        create_module_file(env, fn, submod, opts)
+        create_module_file(env, fn, submod, suffix, dryrun, force)
     rendered = template.render(var)
-    write_file(fn, rendered, opts)
+    write_file(fn, rendered, dest, suffix, dryrun, force)
 
 
-def shall_skip(module, opts):
+def shall_skip(module, private):
     """Check if we want to skip this module."""
     log.debug('Testing if %s should be skipped. %r', module)
     # skip if it has a "private" name and this is selected
     if module != '__init__.py' and module.startswith('_') and \
-        not opts.includeprivate:
+        not private:
         log.debug('Skip %s because its either private.', module)
         return True
     log.debug('Do not skip %s', module)
     return False
 
 
-def recurse_tree(env, rootpath, excludes, opts):
-    """
-    Look for every file in the directory tree and create the corresponding
+def recurse_tree(env, src, dest, excludes, followlinks, force, dryrun, private, suffix):
+    """Look for every file in the directory tree and create the corresponding
     ReST files.
+
+    :param env: the jinja environment
+    :type env: :class:`jinja2.Environment`
+    :param src: the path to the python source files
+    :type src: :class:`str`
+    :param dest: the output directory
+    :type dest: :class:`str`
+    :param excludes: the paths to exclude
+    :type excludes: :class:`list`
+    :param followlinks: follow symbolic links
+    :type followlinks: :class:`bool`
+    :param force: overwrite existing files
+    :type force: :class:`bool`
+    :param dryrun: do not generate files
+    :type dryrun: :class:`bool`
+    :param private: include "_private" modules
+    :type private: :class:`bool`
+    :param suffix: the file extension
+    :type suffix: :class:`str`
     """
     # check if the base directory is a package and get its name
-    if INITPY in os.listdir(rootpath):
-        root_package = rootpath.split(path.sep)[-1]
+    if INITPY in os.listdir(src):
+        root_package = src.split(os.path.sep)[-1]
     else:
         # otherwise, the base is a directory with packages
         root_package = None
 
     toplevels = []
-    followlinks = getattr(opts, 'followlinks', False)
-    includeprivate = getattr(opts, 'includeprivate', False)
-    for root, subs, files in walk(rootpath, followlinks=followlinks):
+    for root, subs, files in walk(src, followlinks=followlinks):
         # document only Python module files (that aren't excluded)
         py_files = sorted(f for f in files
-                          if path.splitext(f)[1] in PY_SUFFIXES and
-                          not is_excluded(path.join(root, f), excludes))
+                          if os.path.splitext(f)[1] in PY_SUFFIXES and
+                          not is_excluded(os.path.join(root, f), excludes))
         is_pkg = INITPY in py_files
         if is_pkg:
             py_files.remove(INITPY)
             py_files.insert(0, INITPY)
-        elif root != rootpath:
+        elif root != src:
             # only accept non-package at toplevel
             del subs[:]
             return
         # remove hidden ('.') and private ('_') directories, as well as
         # excluded dirs
-        if includeprivate:
+        if private:
             exclude_prefixes = ('.',)
         else:
             exclude_prefixes = ('.', '_')
         subs[:] = sorted(sub for sub in subs if not sub.startswith(exclude_prefixes)
-                         and not is_excluded(path.join(root, sub), excludes))
+                         and not is_excluded(os.path.join(root, sub), excludes))
 
         if is_pkg:
             # we are in a package with something to document
             if subs or len(py_files) > 1 or not \
-                shall_skip(path.join(root, INITPY), opts):
-                subpackage = root[len(rootpath):].lstrip(path.sep).\
-                    replace(path.sep, '.')
+                shall_skip(os.path.join(root, INITPY), private):
+                subpackage = root[len(src):].lstrip(os.path.sep).\
+                    replace(os.path.sep, '.')
                 create_package_file(env, root, root_package, subpackage,
-                                    py_files, opts, subs)
+                                    py_files, subs, private, dest, suffix, dryrun, force)
                 toplevels.append(makename(root_package, subpackage))
         else:
             # if we are at the root level, we don't require it to be a package
-            assert root == rootpath and root_package is None
+            assert root == src and root_package is None
             for py_file in py_files:
-                if not shall_skip(path.join(rootpath, py_file), opts):
-                    module = path.splitext(py_file)[0]
-                    create_module_file(env, root_package, module, opts)
+                if not shall_skip(os.path.join(src, py_file), private):
+                    module = os.path.splitext(py_file)[0]
+                    create_module_file(env, root_package, module, dest, suffix, dryrun, force)
                     toplevels.append(module)
     return toplevels
 
 
-def normalize_excludes(rootpath, excludes):
+def normalize_excludes(excludes):
     """Normalize the excluded directory list."""
-    return [path.normpath(path.abspath(exclude)) for exclude in excludes]
+    return [os.path.normpath(os.path.abspath(exclude)) for exclude in excludes]
 
 
 def is_excluded(root, excludes):
@@ -353,76 +366,45 @@ def is_excluded(root, excludes):
     Note: by having trailing slashes, we avoid common prefix issues, like
           e.g. an exlude "foo" also accidentally excluding "foobar".
     """
-    root = path.normpath(root)
+    root = os.path.normpath(root)
     for exclude in excludes:
         if root == exclude:
             return True
     return False
 
 
-def setup_parser():
-    """Sets up the argument parser and returns it
+def generate(self, src, dest, exclude=[], followlinks=False, force=False, dryrun=False, private=False, suffix='rst'):
+    """Generage the rst files
 
-    :returns: the parser
-    :rtype: :class:`optparse.OptionParser`
-    :raises: None
+    Raises an :class:`OSError` if the source path is not a directory.
+
+    :param src: path to python source files
+    :type src: :class:`str`
+    :param dest: output directory
+    :type dest: :class:`str`
+    :param exclude: list of paths to exclude
+    :type exclude: :class:`list`
+    :param followlinks: follow symbolic links
+    :type followlinks: :class:`bool`
+    :param force: overwrite existing files
+    :type force: :class:`bool`
+    :param dryrun: do not create any files
+    :type dryrun: :class:`bool`
+    :param private: include \"_private\" modules
+    :type private: :class:`bool`
+    :param suffix: file suffix
+    :type suffix: :class:`str`
+    :returns: None
+    :rtype: None
+    :raises: OSError
     """
-    description="""Look recursively in <src> for Python modules and packages and create
-one reST file with automodule directives per package in the <output_path>.
-
-The <exclude_path>s can be files and/or directories that will be excluded
-from generation.
-
-Note: By default this script will not overwrite already created files."""
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('src', help='Path to the source directory')
-    parser.add_argument('out', action='store', dest='destdir',
-                        help='Directory to place all output')
-    parser.add_argument('exclude_paths', help='Paths to exclude', nargs='*')
-    parser.add_argument('-d', '--maxdepth', action='store', dest='maxdepth',
-                        help='Maximum depth of submodules to show in the TOC'
-                        '(default: 4)', type='int', default=4)
-    parser.add_argument('-f', '--force', action='store_true', dest='force',
-                        help='Overwrite existing files')
-    parser.add_argument('-l', '--follow-links', action='store_true',
-                        dest='followlinks', default=False,
-                        help='Follow symbolic links. Powerful when combined '
-                        'with collective.recipe.omelette.')
-    parser.add_argument('-n', '--dry-run', action='store_true', dest='dryrun',
-                        help='Run the script without creating files')
-    parser.add_argument('-P', '--private', action='store_true',
-                        dest='includeprivate',
-                        help='Include "_private" modules')
-    parser.add_argument('-s', '--suffix', action='store', dest='suffix',
-                        help='file suffix (default: rst)', default='rst')
-    return parser
-
-
-def main(argv=None):
-    """Parse and check the command line arguments."""
-    if argv is None:
-        argv = sys.argv[1:]
-    parser = setup_parser()
-
-    args = parser.parse_args(argv[1:])
-
-    rootpath = args.src
-    excludes = args.exclude_paths
-    if args.header is None:
-        args.header = path.normpath(rootpath).split(path.sep)[-1]
-    if args.suffix.startswith('.'):
-        args.suffix = args.suffix[1:]
-    if not path.isdir(rootpath):
-        raise OSError("%s is not a directory." % rootpath)
-    if not path.isdir(args.destdir):
-        if not args.dryrun:
-            os.makedirs(args.destdir)
-    rootpath = path.normpath(path.abspath(rootpath))
-    excludes = normalize_excludes(rootpath, excludes)
+    suffix = suffix.strip('.')
+    if not os.path.isdir(src):
+        raise OSError("%s is not a directory" % src)
+    if not os.path.isdir(dest) and not dryrun:
+        os.makedirs(dest)
+    src = os.path.normpath(os.path.abspath(src))
+    exclude = normalize_excludes(exclude)
     loader = make_loader()
     env = make_environment(loader)
-    recurse_tree(env, rootpath, excludes, args)
-
-
-if __name__ == "__main__":
-    main()
+    recurse_tree(env, src, dest, exclude, followlinks, force, dryrun, private, suffix)

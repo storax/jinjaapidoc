@@ -35,7 +35,7 @@ class PyTest(TestCommand):
 
 
 long_description = read('README.rst', 'HISTORY.rst')
-install_requires = []
+install_requires = ['jinja2', 'sphinx']
 tests_require = ['pytest']
 
 
@@ -49,6 +49,7 @@ setup(
     url='https://github.com/storax/jinjaapidoc',
     packages=find_packages('src'),
     package_dir={'': 'src'},
+    package_data={'jinjaapidoc': ['templates/*.rst']},
     include_package_data=True,
     tests_require=tests_require,
     install_requires=install_requires,

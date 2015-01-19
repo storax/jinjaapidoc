@@ -22,22 +22,25 @@ log = logging.getLogger(__name__)
 
 INITPY = '__init__.py'
 PY_SUFFIXES = set(['.py', '.pyx'])
-TEMPLATE_DIRS = ['_templates']
+TEMPLATE_DIR = 'templates'
 
 
 def make_loader(template_dirs=None):
-    """Return a new :class:`jinja2.FileSystemLoader` that uses the template_dirs
+    """Return a new :class:`jinja2.FileSystemLoader` that uses the template_dirs or
+    a :class:`jinja2.PackageLoader` with the default packages
 
     :param template_dirs: searchpath for templates.
     :type template_dirs: list | None
     :returns: a new loader
-    :rtype: :class:`jinja2.FileSystemLoader`
+    :rtype: :class:`jinja2.BaseLoader`
     :raises: None
     """
-    if template_dirs is None:
-        template_dirs = TEMPLATE_DIRS
-    log.debug('Creating loader with template dirs: %s', template_dirs)
-    return jinja2.FileSystemLoader(searchpath=template_dirs)
+    if template_dirs:
+        log.debug('Creating loader with template dirs: %s', template_dirs)
+        return jinja2.FileSystemLoader(searchpath=template_dirs)
+    else:
+        log.debug('Creating package loader with default templates.')
+        return jinja2.PackageLoader(__package__, TEMPLATE_DIR)
 
 
 def make_environment(loader, options=None):
@@ -60,8 +63,20 @@ def make_environment(loader, options=None):
 
 
 def makename(package, module):
-    """Join package and module with a dot."""
+    """Join package and module with a dot.
+
+    Package or Module can be empty.
+
+    :param package: the package name
+    :type package: :class:`str`
+    :param module: the module name
+    :type module: :class:`str`
+    :returns: the joined name
+    :rtype: :class:`str`
+    :raises: :class:`AssertionError`, if both package and module are empty
+    """
     # Both package and module can be None/empty.
+    assert package or module, "Specify either package or module"
     if package:
         name = package
         if module:
@@ -72,7 +87,23 @@ def makename(package, module):
 
 
 def write_file(name, text, dest, suffix, dryrun, force):
-    """Write the output file for module/package <name>."""
+    """Write the output file for module/package <name>.
+
+    :param name: the file name without file extension
+    :type name: :class:`str`
+    :param text: the content of the file
+    :type text: :class:`str`
+    :param dest: the output directory
+    :type dest: :class:`str`
+    :param suffix: the file extension
+    :type suffix: :class:`str`
+    :param dryrun: If True, do not create any files, just log the potential location.
+    :type dryrun: :class:`bool`
+    :param force: Overwrite existing files
+    :type force: :class:`bool`
+    :returns: None
+    :raises: None
+    """
     fname = os.path.join(dest, '%s.%s' % (name, suffix))
     if dryrun:
         log.info('Would create file %s.', fname)
@@ -243,9 +274,27 @@ def get_context(package, module, fullname):
 
 
 def create_module_file(env, package, module, dest, suffix, dryrun, force):
-    """Build the text of the file and write the file."""
+    """Build the text of the file and write the file.
+
+    :param env: the jinja environment for the templates
+    :type env: :class:`jinja2.Environment`
+    :param package: the package name
+    :type package: :class:`str`
+    :param module: the module name
+    :type module: :class:`str`
+    :param dest: the output directory
+    :type dest: :class:`str`
+    :param suffix: the file extension
+    :type suffix: :class:`str`
+    :param dryrun: If True, do not create any files, just log the potential location.
+    :type dryrun: :class:`bool`
+    :param force: Overwrite existing files
+    :type force: :class:`bool`
+    :returns: None
+    :raises: None
+    """
     log.debug('Create module file: package %s, module %s', package, module)
-    template_file = 'gendoc_module.rst'
+    template_file = 'module.rst'
     template = env.get_template(template_file)
     fn = makename(package, module)
     var = get_context(package, module, fn)
@@ -254,13 +303,33 @@ def create_module_file(env, package, module, dest, suffix, dryrun, force):
     write_file(makename(package, module), rendered, dest, suffix, dryrun, force)
 
 
-def create_package_file(env, root, master_package, subroot, py_files, subs, private, dest, suffix, dryrun, force):
-    """Build the text of the file and write the file."""
-    log.debug('Create package file: root %s, masterpackage %s, subroot %s', root, master_package, subroot)
-    template_file = 'gendoc_package.rst'
+def create_package_file(env, root_package, sub_package, private, dest, suffix, dryrun, force):
+    """Build the text of the file and write the file.
+
+    :param env: the jinja environment for the templates
+    :type env: :class:`jinja2.Environment`
+    :param root_package: the parent package
+    :type root_package: :class:`str`
+    :param sub_package: the package name without root
+    :type sub_package: :class:`str`
+    :param private: Include \"_private\" modules
+    :type private: :class:`bool`
+    :param dest: the output directory
+    :type dest: :class:`str`
+    :param suffix: the file extension
+    :type suffix: :class:`str`
+    :param dryrun: If True, do not create any files, just log the potential location.
+    :type dryrun: :class:`bool`
+    :param force: Overwrite existing files
+    :type force: :class:`bool`
+    :returns: None
+    :raises: None
+    """
+    log.debug('Create package file: rootpackage %s, sub_package %s', root_package, sub_package)
+    template_file = 'package.rst'
     template = env.get_template(template_file)
-    fn = makename(master_package, subroot)
-    var = get_context(master_package, subroot, fn)
+    fn = makename(root_package, sub_package)
+    var = get_context(root_package, sub_package, fn)
     var['ispkg'] = True
     for submod in var['submods']:
         if shall_skip(submod, private):
@@ -271,12 +340,18 @@ def create_package_file(env, root, master_package, subroot, py_files, subs, priv
 
 
 def shall_skip(module, private):
-    """Check if we want to skip this module."""
+    """Check if we want to skip this module.
+
+    :param module: the module name
+    :type module: :class:`str`
+    :param private: True, if privates are allowed
+    :type private: :class:`bool`
+    """
     log.debug('Testing if %s should be skipped. %r', module)
     # skip if it has a "private" name and this is selected
     if module != '__init__.py' and module.startswith('_') and \
         not private:
-        log.debug('Skip %s because its either private.', module)
+        log.debug('Skip %s because its either private or __init__.', module)
         return True
     log.debug('Do not skip %s', module)
     return False
@@ -341,8 +416,8 @@ def recurse_tree(env, src, dest, excludes, followlinks, force, dryrun, private, 
                 shall_skip(os.path.join(root, INITPY), private):
                 subpackage = root[len(src):].lstrip(os.path.sep).\
                     replace(os.path.sep, '.')
-                create_package_file(env, root, root_package, subpackage,
-                                    py_files, subs, private, dest, suffix, dryrun, force)
+                create_package_file(env, root_package, subpackage,
+                                    private, dest, suffix, dryrun, force)
                 toplevels.append(makename(root_package, subpackage))
         else:
             # if we are at the root level, we don't require it to be a package

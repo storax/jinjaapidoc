@@ -30,11 +30,10 @@ def setup_argparse():
     """
     log.debug("Setting up argparser.")
     parser = argparse.ArgumentParser(
-        description="Builds the documentaion. First it runs gendoc to create rst files\
-        for the source code. Then it runs sphinx make.\
+        description="Generate rst files for python source files.\
         WARNING: this will delete the contents of the output dirs. You can use -nod.")
     parser.add_argument('src', help='Path to the source directory')
-    parser.add_argument('out', action='store', dest='destdir',
+    parser.add_argument('out', action='store',
                         help='Directory to place all output')
     parser.add_argument('exclude_paths', help='Paths to exclude', nargs='*')
     parser.add_argument('-f', '--force', action='store_true', dest='force',
@@ -52,6 +51,8 @@ def setup_argparse():
                         help='file suffix (default: rst)', default='rst')
     parser.add_argument('-nod', '--nodelete', action='store_true',
                         help='Do not empty the output directories first.')
+    parser.add_argument('-v', '--verbosity', help="Also log debug messages.",
+                        action='store_true')
     return parser
 
 
@@ -66,6 +67,7 @@ def prepare_dir(directory, delete=True):
     :rtype: None
     :raises: None
     """
+    log.debug("Preparing output directories")
     if os.path.exists(directory):
         if delete:
             assert directory != thisdir, 'Trying to delete docs! Specify other output dir!'
@@ -91,13 +93,15 @@ def main(argv=None):
         argv = sys.argv[1:]
     parser = setup_argparse()
     args = parser.parse_args(argv)
-    log.debug("Preparing output directories")
-    prepare_dir(args.destdir, not args.nodelete)
-    gendoc.generate(args.src, args.destdir,
+    if args.verbosity:
+        l = logging.getLogger()
+        l.setLevel(logging.DEBUG)
+    prepare_dir(args.out, not args.nodelete)
+    gendoc.generate(args.src, args.out,
                     exclude=args.exclude_paths,
                     force=args.force,
                     followlinks = args.followlinks,
-                    dry=args.dryrun,
+                    dryrun=args.dryrun,
                     private=args.includeprivate,
                     suffix=args.suffix)
 

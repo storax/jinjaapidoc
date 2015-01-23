@@ -1,1 +1,1 @@
-{% extends "gendoc_package.rst" %}
+{% extends "package.rst" %}

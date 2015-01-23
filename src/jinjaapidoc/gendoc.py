@@ -39,7 +39,7 @@ def make_loader(template_dirs=None):
         log.debug('Creating loader with template dirs: %s', template_dirs)
         return jinja2.FileSystemLoader(searchpath=template_dirs)
     else:
-        log.debug('Creating package loader with default templates.')
+        log.debug('Creating package loader for %s, dirs %s.', __package__, TEMPLATE_DIR)
         return jinja2.PackageLoader(__package__, TEMPLATE_DIR)
 
 
@@ -347,7 +347,7 @@ def shall_skip(module, private):
     :param private: True, if privates are allowed
     :type private: :class:`bool`
     """
-    log.debug('Testing if %s should be skipped. %r', module)
+    log.debug('Testing if %s should be skipped.', module)
     # skip if it has a "private" name and this is selected
     if module != '__init__.py' and module.startswith('_') and \
         not private:
@@ -448,7 +448,7 @@ def is_excluded(root, excludes):
     return False
 
 
-def generate(self, src, dest, exclude=[], followlinks=False, force=False, dryrun=False, private=False, suffix='rst'):
+def generate(src, dest, exclude=[], followlinks=False, force=False, dryrun=False, private=False, suffix='rst'):
     """Generage the rst files
 
     Raises an :class:`OSError` if the source path is not a directory.

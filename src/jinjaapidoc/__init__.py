@@ -13,7 +13,7 @@ def setup_basic_logger():
     :rtype: None
     :raises: None
     """
-    fmt = "%(levelname)-8s:%(name)s:%(lineno)d: %(message)s"
+    fmt = "%(levelname)-8s:%(name)s:l.%(lineno)4d: %(message)s"
     logging.basicConfig(format=fmt)
 
 

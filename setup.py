@@ -54,6 +54,11 @@ setup(
     tests_require=tests_require,
     install_requires=install_requires,
     cmdclass={'test': PyTest},
+    entry_points={
+        'console_scripts': [
+            'jinjaapidoc = jinjaapidoc.updatedoc:main',
+        ],
+    },
     license='BSD',
     zip_safe=False,
     keywords='jinjaapidoc',

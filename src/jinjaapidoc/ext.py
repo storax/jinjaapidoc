@@ -1,6 +1,7 @@
 """The sphinx extension"""
-
 from sphinx.ext import autodoc
+
+import jinjaapidoc
 
 
 class ModDocstringDocumenter(autodoc.ModuleDocumenter):
@@ -37,4 +38,6 @@ def setup(app):
     :rtype: None
     :raises: None
     """
+    app.setup_extension('sphinx.ext.autodoc')
     app.add_autodocumenter(ModDocstringDocumenter)
+    return {'version': jinjaapidoc.__version__, 'parallel_read_safe': True}

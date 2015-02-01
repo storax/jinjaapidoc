@@ -182,9 +182,9 @@ def _get_submodules(app, module):
         p = module
     else:
         raise TypeError("Only Module or String accepted. %s given." % type(module))
-    app.debug('Getting submodules of %s', p)
+    app.debug2('Getting submodules of %s', p)
     l = [(name, ispkg) for loader, name, ispkg in pkgutil.iter_modules(p)]
-    app.debug('Found submodules of %s: %s', module, l)
+    app.debug2('Found submodules of %s: %s', module, l)
     return l
 
 
@@ -254,7 +254,7 @@ def get_context(app, package, module, fullname):
     var = {'package': package,
            'module': module,
            'fullname': fullname}
-    app.debug('Creating context for: package %s, module %s, fullname %s', package, module, fullname)
+    app.debug2('Creating context for: package %s, module %s, fullname %s', package, module, fullname)
     obj = import_name(app, fullname)
     if not obj:
         for k in ('subpkgs', 'submods', 'classes', 'allclasses',
@@ -355,13 +355,13 @@ def shall_skip(app, module, private):
     :param private: True, if privates are allowed
     :type private: :class:`bool`
     """
-    app.debug('Testing if %s should be skipped.', module)
+    app.debug2('Testing if %s should be skipped.', module)
     # skip if it has a "private" name and this is selected
     if module != '__init__.py' and module.startswith('_') and \
         not private:
-        app.debug('Skip %s because its either private or __init__.', module)
+        app.debug2('Skip %s because its either private or __init__.', module)
         return True
-    app.debug('Do not skip %s', module)
+    app.debug2('Do not skip %s', module)
     return False
 
 

@@ -12,13 +12,11 @@ Copyright 2007-2014 by the Sphinx team, see http://sphinx-doc.org/latest/authors
 import os
 import inspect
 import pkgutil
-import logging
 
 import jinja2
 from sphinx.util.osutil import walk
 from sphinx.ext import autosummary
 
-log = logging.getLogger(__name__)
 
 INITPY = '__init__.py'
 PY_SUFFIXES = set(['.py', '.pyx'])
@@ -29,37 +27,28 @@ def make_loader(template_dirs=None):
     """Return a new :class:`jinja2.FileSystemLoader` that uses the template_dirs or
     a :class:`jinja2.PackageLoader` with the default packages
 
-    :param template_dirs: searchpath for templates.
-    :type template_dirs: list | None
+    :param template_dirs: directories to search for templates
+    :type template_dirs: None | :class:`list`
     :returns: a new loader
-    :rtype: :class:`jinja2.BaseLoader`
+    :rtype: :class:`jinja2.ChoiceLoader`
     :raises: None
     """
-    if template_dirs:
-        log.debug('Creating loader with template dirs: %s', template_dirs)
-        return jinja2.FileSystemLoader(searchpath=template_dirs)
-    else:
-        log.debug('Creating package loader for %s, dirs %s.', __package__, TEMPLATE_DIR)
-        return jinja2.PackageLoader(__package__, TEMPLATE_DIR)
+    template_dirs = template_dirs or []
+    fl = jinja2.FileSystemLoader(searchpath=template_dirs)
+    pl = jinja2.PackageLoader(__package__, TEMPLATE_DIR)
+    return jinja2.ChoiceLoader([fl, pl])
 
 
-def make_environment(loader, options=None):
+def make_environment(loader):
     """Return a new :class:`jinja2.Environment` with the given loader
 
     :param loader: a jinja2 loader
     :type loader: :class:`jinja2.BaseLoader`
-    :param options: environment options
-    :type options: :class:`dict`
     :returns: a new environment
     :rtype: :class:`jinja2.Environment`
     :raises: None
     """
-    if options is None:
-        options = {}
-    if loader:
-       options['loader'] = loader
-    log.debug('Creating environment with options: %s', options)
-    return jinja2.Environment(**options)
+    return jinja2.Environment(loader=loader)
 
 
 def makename(package, module):
@@ -86,9 +75,11 @@ def makename(package, module):
     return name
 
 
-def write_file(name, text, dest, suffix, dryrun, force):
+def write_file(app, name, text, dest, suffix, dryrun, force):
     """Write the output file for module/package <name>.
 
+    :param app: the sphinx app
+    :type app: :class:`sphinx.application.Sphinx`
     :param name: the file name without file extension
     :type name: :class:`str`
     :param text: the content of the file
@@ -106,12 +97,12 @@ def write_file(name, text, dest, suffix, dryrun, force):
     """
     fname = os.path.join(dest, '%s.%s' % (name, suffix))
     if dryrun:
-        log.info('Would create file %s.', fname)
+        app.info('Would create file %s.' % fname)
         return
     if not force and os.path.isfile(fname):
-        log.info('File %s already exists, skipping.', fname)
+        app.info('File %s already exists, skipping.' % fname)
     else:
-        log.info('Creating file %s.' % fname)
+        app.info('Creating file %s.' % fname)
         f = open(fname, 'w')
         try:
             f.write(text)
@@ -119,7 +110,7 @@ def write_file(name, text, dest, suffix, dryrun, force):
             f.close()
 
 
-def import_name(name):
+def import_name(app, name):
     """Import the given name and return name, obj, parent, mod_name
 
     :param name: name to import
@@ -129,17 +120,19 @@ def import_name(name):
     :raises: None
     """
     try:
-        log.debug('Importing %r', name)
+        app.debug2('Importing %r', name)
         name, obj = autosummary.import_by_name(name)[:2]
-        log.debug('Imported %s', obj)
+        app.debug2('Imported %s', obj)
         return obj
     except ImportError as e:
-        log.exception("Failed to import %r: %s", name, e)
+        app.warn("Jinjapidoc failed to import %r: %s", name, e)
 
 
-def get_members(mod, typ, include_public=None):
+def get_members(app, mod, typ, include_public=None):
     """Return the memebrs of mod of the given type
 
+    :param app: the sphinx app
+    :type app: :class:`sphinx.application.Sphinx`
     :param mod: the module with members
     :type mod: module
     :param typ: the typ, ``'class'``, ``'function'``, ``'exception'``, ``'data'``, ``'members'``
@@ -165,13 +158,15 @@ def get_members(mod, typ, include_public=None):
             items.append(name)
     public = [x for x in items
               if x in include_public or not x.startswith('_')]
-    log.debug('Got members of %s of type %s: public %s and %s', mod, typ, public, items)
+    app.debug2('Got members of %s of type %s: public %s and %s', mod, typ, public, items)
     return public, items
 
 
-def _get_submodules(module):
+def _get_submodules(app, module):
     """Get all submodules for the given module/package
 
+    :param app: the sphinx app
+    :type app: :class:`sphinx.application.Sphinx`
     :param module: the module to query or module path
     :type module: module | str
     :returns: list of module names and boolean whether its a package
@@ -187,39 +182,43 @@ def _get_submodules(module):
         p = module
     else:
         raise TypeError("Only Module or String accepted. %s given." % type(module))
-    log.debug('Getting submodules of %s', p)
+    app.debug('Getting submodules of %s', p)
     l = [(name, ispkg) for loader, name, ispkg in pkgutil.iter_modules(p)]
-    log.debug('Found submodules of %s: %s', module, l)
+    app.debug('Found submodules of %s: %s', module, l)
     return l
 
 
-def get_submodules(module):
+def get_submodules(app, module):
     """Get all submodules without packages for the given module/package
 
+    :param app: the sphinx app
+    :type app: :class:`sphinx.application.Sphinx`
     :param module: the module to query or module path
     :type module: module | str
     :returns: list of module names excluding packages
     :rtype: list
     :raises: TypeError
     """
-    l = _get_submodules(module)
+    l = _get_submodules(app, module)
     return [name for name, ispkg in l if not ispkg]
 
 
-def get_subpackages(module):
+def get_subpackages(app, module):
     """Get all subpackages for the given module/package
 
+    :param app: the sphinx app
+    :type app: :class:`sphinx.application.Sphinx`
     :param module: the module to query or module path
     :type module: module | str
     :returns: list of packages names
     :rtype: list
     :raises: TypeError
     """
-    l = _get_submodules(module)
+    l = _get_submodules(app, module)
     return [name for name, ispkg in l if ispkg]
 
 
-def get_context(package, module, fullname):
+def get_context(app, package, module, fullname):
     """Return a dict for template rendering
 
     Variables:
@@ -240,6 +239,8 @@ def get_context(package, module, fullname):
       * :members: dir(module)
 
 
+    :param app: the sphinx app
+    :type app: :class:`sphinx.application.Sphinx`
     :param package: the parent package name
     :type package: str
     :param module: the module name
@@ -253,8 +254,8 @@ def get_context(package, module, fullname):
     var = {'package': package,
            'module': module,
            'fullname': fullname}
-    log.debug('Creating context for: package %s, module %s, fullname %s', package, module, fullname)
-    obj = import_name(fullname)
+    app.debug('Creating context for: package %s, module %s, fullname %s', package, module, fullname)
+    obj = import_name(app, fullname)
     if not obj:
         for k in ('subpkgs', 'submods', 'classes', 'allclasses',
                   'exceptions', 'allexceptions', 'functions', 'allfunctions',
@@ -262,20 +263,22 @@ def get_context(package, module, fullname):
             var[k] = []
         return var
 
-    var['subpkgs'] = get_subpackages(obj)
-    var['submods'] = get_submodules(obj)
+    var['subpkgs'] = get_subpackages(app, obj)
+    var['submods'] = get_submodules(app, obj)
     var['classes'], var['allclasses'] = get_members(obj, 'class')
     var['exceptions'], var['allexceptions'] = get_members(obj, 'exception')
     var['functions'], var['allfunctions'] = get_members(obj, 'function')
     var['data'], var['alldata'] = get_members(obj, 'data')
     var['members'] = get_members(obj, 'members')
-    log.debug('Created context: %s', var)
+    app.debug2('Created context: %s', var)
     return var
 
 
-def create_module_file(env, package, module, dest, suffix, dryrun, force):
+def create_module_file(app, env, package, module, dest, suffix, dryrun, force):
     """Build the text of the file and write the file.
 
+    :param app: the sphinx app
+    :type app: :class:`sphinx.application.Sphinx`
     :param env: the jinja environment for the templates
     :type env: :class:`jinja2.Environment`
     :param package: the package name
@@ -293,19 +296,22 @@ def create_module_file(env, package, module, dest, suffix, dryrun, force):
     :returns: None
     :raises: None
     """
-    log.debug('Create module file: package %s, module %s', package, module)
+    app.debug('Create module file: package %s, module %s', package, module)
     template_file = 'module.rst'
     template = env.get_template(template_file)
     fn = makename(package, module)
-    var = get_context(package, module, fn)
+    var = get_context(app, package, module, fn)
     var['ispkg'] = False
     rendered = template.render(var)
-    write_file(makename(package, module), rendered, dest, suffix, dryrun, force)
+    write_file(app, makename(package, module), rendered, dest, suffix, dryrun, force)
 
 
-def create_package_file(env, root_package, sub_package, private, dest, suffix, dryrun, force):
+def create_package_file(app, env, root_package, sub_package, private,
+                        dest, suffix, dryrun, force):
     """Build the text of the file and write the file.
 
+    :param app: the sphinx app
+    :type app: :class:`sphinx.application.Sphinx`
     :param env: the jinja environment for the templates
     :type env: :class:`jinja2.Environment`
     :param root_package: the parent package
@@ -325,42 +331,46 @@ def create_package_file(env, root_package, sub_package, private, dest, suffix, d
     :returns: None
     :raises: None
     """
-    log.debug('Create package file: rootpackage %s, sub_package %s', root_package, sub_package)
+    app.debug('Create package file: rootpackage %s, sub_package %s', root_package, sub_package)
     template_file = 'package.rst'
     template = env.get_template(template_file)
     fn = makename(root_package, sub_package)
-    var = get_context(root_package, sub_package, fn)
+    var = get_context(app, root_package, sub_package, fn)
     var['ispkg'] = True
     for submod in var['submods']:
-        if shall_skip(submod, private):
+        if shall_skip(app, submod, private):
             continue
-        create_module_file(env, fn, submod, suffix, dryrun, force)
+        create_module_file(app, env, fn, submod, suffix, dryrun, force)
     rendered = template.render(var)
-    write_file(fn, rendered, dest, suffix, dryrun, force)
+    write_file(app, fn, rendered, dest, suffix, dryrun, force)
 
 
-def shall_skip(module, private):
+def shall_skip(app, module, private):
     """Check if we want to skip this module.
 
+    :param app: the sphinx app
+    :type app: :class:`sphinx.application.Sphinx`
     :param module: the module name
     :type module: :class:`str`
     :param private: True, if privates are allowed
     :type private: :class:`bool`
     """
-    log.debug('Testing if %s should be skipped.', module)
+    app.debug('Testing if %s should be skipped.', module)
     # skip if it has a "private" name and this is selected
     if module != '__init__.py' and module.startswith('_') and \
         not private:
-        log.debug('Skip %s because its either private or __init__.', module)
+        app.debug('Skip %s because its either private or __init__.', module)
         return True
-    log.debug('Do not skip %s', module)
+    app.debug('Do not skip %s', module)
     return False
 
 
-def recurse_tree(env, src, dest, excludes, followlinks, force, dryrun, private, suffix):
+def recurse_tree(app, env, src, dest, excludes, followlinks, force, dryrun, private, suffix):
     """Look for every file in the directory tree and create the corresponding
     ReST files.
 
+    :param app: the sphinx app
+    :type app: :class:`sphinx.application.Sphinx`
     :param env: the jinja environment
     :type env: :class:`jinja2.Environment`
     :param src: the path to the python source files
@@ -413,19 +423,19 @@ def recurse_tree(env, src, dest, excludes, followlinks, force, dryrun, private, 
         if is_pkg:
             # we are in a package with something to document
             if subs or len(py_files) > 1 or not \
-                shall_skip(os.path.join(root, INITPY), private):
+                shall_skip(app, os.path.join(root, INITPY), private):
                 subpackage = root[len(src):].lstrip(os.path.sep).\
                     replace(os.path.sep, '.')
-                create_package_file(env, root_package, subpackage,
+                create_package_file(app, env, root_package, subpackage,
                                     private, dest, suffix, dryrun, force)
                 toplevels.append(makename(root_package, subpackage))
         else:
             # if we are at the root level, we don't require it to be a package
             assert root == src and root_package is None
             for py_file in py_files:
-                if not shall_skip(os.path.join(src, py_file), private):
+                if not shall_skip(app, os.path.join(src, py_file), private):
                     module = os.path.splitext(py_file)[0]
-                    create_module_file(env, root_package, module, dest, suffix, dryrun, force)
+                    create_module_file(app, env, root_package, module, dest, suffix, dryrun, force)
                     toplevels.append(module)
     return toplevels
 
@@ -448,11 +458,15 @@ def is_excluded(root, excludes):
     return False
 
 
-def generate(src, dest, exclude=[], followlinks=False, force=False, dryrun=False, private=False, suffix='rst'):
+def generate(app, src, dest, exclude=[], followlinks=False,
+             force=False, dryrun=False, private=False, suffix='rst',
+             template_dirs=None):
     """Generage the rst files
 
     Raises an :class:`OSError` if the source path is not a directory.
 
+    :param app: the sphinx app
+    :type app: :class:`sphinx.application.Sphinx`
     :param src: path to python source files
     :type src: :class:`str`
     :param dest: output directory
@@ -469,6 +483,8 @@ def generate(src, dest, exclude=[], followlinks=False, force=False, dryrun=False
     :type private: :class:`bool`
     :param suffix: file suffix
     :type suffix: :class:`str`
+    :param template_dirs: directories to search for user templates
+    :type template_dirs: None | :class:`list`
     :returns: None
     :rtype: None
     :raises: OSError
@@ -480,6 +496,6 @@ def generate(src, dest, exclude=[], followlinks=False, force=False, dryrun=False
         os.makedirs(dest)
     src = os.path.normpath(os.path.abspath(src))
     exclude = normalize_excludes(exclude)
-    loader = make_loader()
+    loader = make_loader(template_dirs)
     env = make_environment(loader)
-    recurse_tree(env, src, dest, exclude, followlinks, force, dryrun, private, suffix)
+    recurse_tree(app, env, src, dest, exclude, followlinks, force, dryrun, private, suffix)

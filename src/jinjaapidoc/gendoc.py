@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""This is a modification of sphinx.apidoc by David.Zuber
+"""This is a modification of sphinx.apidoc by David.Zuber.
 It uses jinja templates to render the rst files.
 
 Parses a directory tree looking for Python modules and packages and creates
 ReST files appropriately to create code documentation with Sphinx.
 
 This is derived form the "sphinx-apidoc" script, which is:
-Copyright 2007-2014 by the Sphinx team, see http://sphinx-doc.org/latest/authors.html.
+
+  Copyright 2007-2014 by the Sphinx team, see http://sphinx-doc.org/latest/authors.html.
 """
 import os
 import inspect

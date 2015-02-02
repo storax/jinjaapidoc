@@ -1,4 +1,4 @@
-"""The sphinx extension"""
+"""This module contains content related to sphinx extensions."""
 from sphinx.ext import autodoc
 
 

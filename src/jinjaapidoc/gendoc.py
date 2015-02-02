@@ -291,11 +291,11 @@ def get_context(app, package, module, fullname):
 
     var['subpkgs'] = get_subpackages(app, obj)
     var['submods'] = get_submodules(app, obj)
-    var['classes'], var['allclasses'] = get_members(obj, 'class')
-    var['exceptions'], var['allexceptions'] = get_members(obj, 'exception')
-    var['functions'], var['allfunctions'] = get_members(obj, 'function')
-    var['data'], var['alldata'] = get_members(obj, 'data')
-    var['members'] = get_members(obj, 'members')
+    var['classes'], var['allclasses'] = get_members(app, obj, 'class')
+    var['exceptions'], var['allexceptions'] = get_members(app, obj, 'exception')
+    var['functions'], var['allfunctions'] = get_members(app, obj, 'function')
+    var['data'], var['alldata'] = get_members(app, obj, 'data')
+    var['members'] = get_members(app, obj, 'members')
     app.debug2('Created context: %s', var)
     return var
 
@@ -366,7 +366,7 @@ def create_package_file(app, env, root_package, sub_package, private,
     for submod in var['submods']:
         if shall_skip(app, submod, private):
             continue
-        create_module_file(app, env, fn, submod, suffix, dryrun, force)
+        create_module_file(app, env, fn, submod, dest, suffix, dryrun, force)
     rendered = template.render(var)
     write_file(app, fn, rendered, dest, suffix, dryrun, force)
 
@@ -445,7 +445,6 @@ def recurse_tree(app, env, src, dest, excludes, followlinks, force, dryrun, priv
             exclude_prefixes = ('.', '_')
         subs[:] = sorted(sub for sub in subs if not sub.startswith(exclude_prefixes)
                          and not is_excluded(os.path.join(root, sub), excludes))
-
         if is_pkg:
             # we are in a package with something to document
             if subs or len(py_files) > 1 or not \
@@ -545,7 +544,7 @@ def main(app):
     out = c.jinjaapi_outputdir or app.env.srcdir
 
     prepare_dir(app, out, not c.jinjaapi_nodelete)
-    generate(app, out, src,
+    generate(app, src, out,
              exclude=c.jinjaapi_exclude_paths,
              force=c.jinjaapi_force,
              followlinks=c.jinjaapi_followlinks,

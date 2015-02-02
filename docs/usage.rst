@@ -2,6 +2,21 @@
 Usage
 ========
 
+Quickstart
+----------
+
+Apply these changes to your ``conf.py``:
+
+  1. Add ``jinjaapidoc`` to the extensions. Preferably before autosummary
+  2. Set ``jinjaapidoc_srcdir`` to the location of your python source code.
+  3. Optional - Set ``jinjaapidoc_outpudir`` to the directory for all generated
+     files.
+  4. Set ``autosummary_generate`` to ``True``.
+  5. Include the top-level packages/modules into your documents.
+
+Enable Extension
+----------------
+
 To use Jinja Api Documentation in a project, add it to the extensions in your sphinx ``conf.py``::
 
   extensions = [

@@ -26,7 +26,7 @@ Sphinx API Doc with Jinja2 templates
 Documentation
 -------------
 
-The full documentation is at http://jinjaapidoc.rtfd.org.
+The full documentation is at http://jinjaapidoc.rtfd.org or http://pythonhosted.org//jinjaapidoc/.
 
 
 Features

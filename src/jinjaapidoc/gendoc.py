@@ -22,6 +22,8 @@ from sphinx.ext import autosummary
 INITPY = '__init__.py'
 PY_SUFFIXES = set(['.py', '.pyx'])
 TEMPLATE_DIR = 'templates'
+MODULE_TEMPLATE_NAME = 'jinjaapi_module.rst'
+PACKAGE_TEMPLATE_NAME = 'jinjaapi_package.rst'
 
 
 def prepare_dir(app, directory, delete=False):
@@ -329,7 +331,7 @@ def create_module_file(app, env, package, module, dest, suffix, dryrun, force):
     :raises: None
     """
     app.debug('Create module file: package %s, module %s', package, module)
-    template_file = 'module.rst'
+    template_file = MODULE_TEMPLATE_NAME
     template = env.get_template(template_file)
     fn = makename(package, module)
     var = get_context(app, package, module, fn)
@@ -364,7 +366,7 @@ def create_package_file(app, env, root_package, sub_package, private,
     :raises: None
     """
     app.debug('Create package file: rootpackage %s, sub_package %s', root_package, sub_package)
-    template_file = 'package.rst'
+    template_file = PACKAGE_TEMPLATE_NAME
     template = env.get_template(template_file)
     fn = makename(root_package, sub_package)
     var = get_context(app, root_package, sub_package, fn)

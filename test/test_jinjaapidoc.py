@@ -1,20 +1,17 @@
 """
 Tests for `jinjaapidoc` module.
 """
-#import pytest
+import os
+import subprocess
 
-#from jinjaapidoc import jinjaapidoc
+here = os.path.abspath(os.path.dirname(__file__))
 
 
-class TestJinjaapidoc(object):
+def test_buid():
+    docdir = os.path.join(here, 'testdoc')
+    out = os.path.join(docdir, 'build')
+    src = os.path.join(docdir, 'source')
 
-    @classmethod
-    def setup_class(cls):
-        pass
-
-    def test_something(self):
-        pass
-
-    @classmethod
-    def teardown_class(cls):
-        pass
+    errno = subprocess.call(['sphinx-build', src, out, '-W', '-v'])
+    if errno != 0:
+        raise SystemExit(errno)

@@ -24,7 +24,7 @@ Submodules
 {% block contents %}{% if ispkg %}Module contents
 ---------------{% endif %}
 
-.. autosimple:: {{ fullname }}
+.. automoddoconly:: {{ fullname }}
 
 .. currentmodule:: {{ fullname }}
 

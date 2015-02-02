@@ -187,26 +187,26 @@ to avoid that and fall back to the default one. The template looks like this::
      :undoc-members:
      :show-inheritance:
   
-     {% block methods %}
+     {% block methods -%}
      .. automethod:: __init__
   
-     {% if methods %}
+     {% if methods -%}
      .. rubric:: **Methods**
   
      .. autosummary::
      {% for item in methods %}
         ~{{ name }}.{{ item }}
      {%- endfor %}
-     {% endif %}
-     {% endblock %}
+     {%- endif %}
+     {%- endblock %}
   
-     {% block attributes %}
-     {% if attributes %}
+     {% block attributes -%}
+     {%- if attributes -%}
      .. rubric:: **Attributes**
   
      .. autosummary::
      {% for item in attributes %}
         ~{{ name }}.{{ item }}
      {%- endfor %}
-     {% endif %}
-     {% endblock %}
+     {%- endif %}
+     {%- endblock %}

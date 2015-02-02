@@ -21,7 +21,7 @@ def setup(app):
     :rtype: None
     :raises: None
     """
-    # Connect before autosummary 
+    # Connect before autosummary
     app.connect('builder-inited', gendoc.main)
 
     app.setup_extension('sphinx.ext.autodoc')

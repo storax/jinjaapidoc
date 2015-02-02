@@ -390,7 +390,7 @@ def shall_skip(app, module, private):
     app.debug2('Testing if %s should be skipped.', module)
     # skip if it has a "private" name and this is selected
     if module != '__init__.py' and module.startswith('_') and \
-        not private:
+       not private:
         app.debug2('Skip %s because its either private or __init__.', module)
         return True
     app.debug2('Do not skip %s', module)
@@ -454,7 +454,7 @@ def recurse_tree(app, env, src, dest, excludes, followlinks, force, dryrun, priv
         if is_pkg:
             # we are in a package with something to document
             if subs or len(py_files) > 1 or not \
-                shall_skip(app, os.path.join(root, INITPY), private):
+               shall_skip(app, os.path.join(root, INITPY), private):
                 subpackage = root[len(src):].lstrip(os.path.sep).\
                     replace(os.path.sep, '.')
                 create_package_file(app, env, root_package, subpackage,

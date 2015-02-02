@@ -6,10 +6,10 @@ class ModDocstringDocumenter(autodoc.ModuleDocumenter):
     """A documenter for modules which only inserts the docstring of the module."""
     objtype = "moddoconly"
 
-    #do not indent the content
+    # do not indent the content
     content_indent = ""
 
-    #do not add a header to the docstring
+    # do not add a header to the docstring
     def add_directive_header(self, sig):
         """Add the directive header and options to the generated content."""
         domain = getattr(self, 'domain', 'py')

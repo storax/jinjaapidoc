@@ -132,6 +132,12 @@ def write_file(app, name, text, dest, suffix, dryrun, force):
         f = open(fname, 'w')
         try:
             f.write(text)
+            relpath = os.path.relpath(fname, start=app.env.srcdir)
+            abspath = os.sep + relpath
+            docpath = app.env.relfn2path(abspath)[0]
+            docpath = docpath.rsplit(os.path.extsep, 1)[0]
+            app.debug2('Adding document %s' % docpath)
+            app.env.found_docs.add(docpath)
         finally:
             f.close()
 

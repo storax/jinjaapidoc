@@ -21,6 +21,9 @@ def setup(app):
     :rtype: None
     :raises: None
     """
+    # Connect before autosummary 
+    app.connect('builder-inited', gendoc.main)
+
     app.setup_extension('sphinx.ext.autodoc')
     app.setup_extension('sphinx.ext.autosummary')
 
@@ -36,5 +39,4 @@ def setup(app):
     app.add_config_value('jinjaapi_includeprivate', True, 'env')
     app.add_config_value('jinjaapi_templatedirs', [], 'env')
 
-    app.connect('builder-inited', gendoc.main)
-    return {'version': __version__, 'parallel_read_safe': True}
+    return {'version': __version__, 'parallel_read_safe': False}

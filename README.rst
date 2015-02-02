@@ -2,19 +2,19 @@
 Jinjaapidoc Documentation
 =========================================================
 
-.. image:: http://img.shields.io/pypi/v/jinjaapidoc.png
+.. image:: http://img.shields.io/pypi/v/jinjaapidoc.png?style=flat
     :target: https://pypi.python.org/pypi/jinjaapidoc
 
-.. image:: https://travis-ci.org/storax/jinjaapidoc.png?branch=master
+.. image:: https://img.shields.io/travis/storax/jinjaapidoc/master.png?style=flat
     :target: https://travis-ci.org/storax/jinjaapidoc
 
-.. image:: http://img.shields.io/pypi/dm/jinjaapidoc.png
+.. image:: http://img.shields.io/pypi/dm/jinjaapidoc.png?style=flat
     :target: https://pypi.python.org/pypi/jinjaapidoc
 
-.. image:: https://coveralls.io/repos/storax/jinjaapidoc/badge.png
+.. image:: https://img.shields.io/coveralls/storax/jinjaapidoc/master.png?style=flat
     :target: https://coveralls.io/r/storax/jinjaapidoc
 
-.. image:: http://img.shields.io/pypi/l/jinjaapidoc.svg
+.. image:: http://img.shields.io/pypi/l/jinjaapidoc.png?style=flat
     :target: https://pypi.python.org/pypi/jinjaapidoc
 
 

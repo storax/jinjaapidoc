@@ -1,1 +1,0 @@
-{% extends "package.rst" %}

@@ -5,8 +5,12 @@
 
 .. include:: ../README.rst
 
-Welcome to **Jinja Api Documentation**'s documentation!
-==================================================================================================
+Demo
+----
+
+This documentation itself makes use of the jinjaapidoc package.
+Check :ref:`apireference` to see the outcome of the default templates.
+All pages in the reference are automatically generated.
 
 Contents:
 ---------
@@ -16,8 +20,6 @@ Contents:
 
    installation
    usage
-   userdoc/index
-   devdoc/index
    reference
    contributing
    authors

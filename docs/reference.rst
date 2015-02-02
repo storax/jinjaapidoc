@@ -1,3 +1,5 @@
+.. _apireference:
+
 Reference
 ==========
 

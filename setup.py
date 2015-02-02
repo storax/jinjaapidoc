@@ -41,7 +41,7 @@ tests_require = ['pytest']
 
 setup(
     name='jinjaapidoc',
-    version='0.1.1',
+    version='0.2.0',
     description='Sphinx API Doc with Jinja2 templates',
     long_description=long_description,
     author='David Zuber',
@@ -49,7 +49,8 @@ setup(
     url='https://github.com/storax/jinjaapidoc',
     packages=find_packages('src'),
     package_dir={'': 'src'},
-    package_data={'jinjaapidoc': ['templates/*.rst']},
+    package_data={'jinjaapidoc': ['templates/*.rst',
+                                  'autosummarytemplates/*.rst']},
     include_package_data=True,
     tests_require=tests_require,
     install_requires=install_requires,

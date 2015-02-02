@@ -1,9 +1,6 @@
 """The sphinx extension"""
 from sphinx.ext import autodoc
 
-import jinjaapidoc
-import jinjaapidoc.updatedoc as updatedoc
-
 
 class ModDocstringDocumenter(autodoc.ModuleDocumenter):
     """A documenter for modules which only inserts the docstring of the module."""

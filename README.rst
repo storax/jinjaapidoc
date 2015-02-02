@@ -1,5 +1,5 @@
 =========================================================
-Jinja Api Documentation
+Jinjaapidoc Documentation
 =========================================================
 
 .. image:: http://img.shields.io/pypi/v/jinjaapidoc.png

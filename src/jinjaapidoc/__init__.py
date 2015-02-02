@@ -39,4 +39,4 @@ def setup(app):
     app.add_config_value('jinjaapi_includeprivate', True, 'env')
     app.add_config_value('jinjaapi_templatedirs', [], 'env')
 
-    return {'version': __version__, 'parallel_read_safe': False}
+    return {'version': __version__, 'parallel_read_safe': True}

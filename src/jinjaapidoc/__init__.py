@@ -11,9 +11,9 @@ def setup(app):
     """Setup the sphinx extension
 
     This will setup autodoc and autosummary.
-    Add the :class:`ModDocstringDocumenter`.
+    Add the :class:`ext.ModDocstringDocumenter`.
     Add the config values.
-    Connect builder-inited event to :func:`updatedoc.main`.
+    Connect builder-inited event to :func:`gendoc.main`.
 
     :param app: the sphinx app
     :type app: :class:`sphinx.application.Sphinx`

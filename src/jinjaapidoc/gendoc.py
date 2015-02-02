@@ -12,6 +12,7 @@ Copyright 2007-2014 by the Sphinx team, see http://sphinx-doc.org/latest/authors
 import os
 import inspect
 import pkgutil
+import pkg_resources
 import shutil
 
 import jinja2
@@ -22,8 +23,13 @@ from sphinx.ext import autosummary
 INITPY = '__init__.py'
 PY_SUFFIXES = set(['.py', '.pyx'])
 TEMPLATE_DIR = 'templates'
+"""Built-in template dir for jinjaapi rendering"""
+AUTOSUMMARYTEMPLATE_DIR = 'autosummarytemplates'
+"""Templates for autosummary"""
 MODULE_TEMPLATE_NAME = 'jinjaapi_module.rst'
+"""Name of the template that is used for rendering modules."""
 PACKAGE_TEMPLATE_NAME = 'jinjaapi_package.rst'
+"""Name of the template that is used for rendering packages."""
 
 
 def prepare_dir(app, directory, delete=False):
@@ -51,20 +57,16 @@ def prepare_dir(app, directory, delete=False):
         os.mkdir(directory)
 
 
-def make_loader(template_dirs=None):
-    """Return a new :class:`jinja2.FileSystemLoader` that uses the template_dirs or
-    a :class:`jinja2.PackageLoader` with the default packages
+def make_loader(template_dirs):
+    """Return a new :class:`jinja2.FileSystemLoader` that uses the template_dirs
 
     :param template_dirs: directories to search for templates
     :type template_dirs: None | :class:`list`
     :returns: a new loader
-    :rtype: :class:`jinja2.ChoiceLoader`
+    :rtype: :class:`jinja2.FileSystemLoader`
     :raises: None
     """
-    template_dirs = template_dirs or []
-    fl = jinja2.FileSystemLoader(searchpath=template_dirs)
-    pl = jinja2.PackageLoader(__package__, TEMPLATE_DIR)
-    return jinja2.ChoiceLoader([fl, pl])
+    return jinja2.FileSystemLoader(searchpath=template_dirs)
 
 
 def make_environment(loader):
@@ -551,6 +553,13 @@ def main(app):
 
     out = c.jinjaapi_outputdir or app.env.srcdir
 
+    if c.jinjaapi_addsummarytemplate:
+        tpath = pkg_resources.resource_filename(__package__, AUTOSUMMARYTEMPLATE_DIR)
+        c.templates_path.append(tpath)
+
+    tpath = pkg_resources.resource_filename(__package__, TEMPLATE_DIR)
+    c.templates_path.append(tpath)
+
     prepare_dir(app, out, not c.jinjaapi_nodelete)
     generate(app, src, out,
              exclude=c.jinjaapi_exclude_paths,
@@ -559,4 +568,4 @@ def main(app):
              dryrun=c.jinjaapi_dryrun,
              private=c.jinjaapi_includeprivate,
              suffix=c.source_suffix,
-             template_dirs=c.jinjaapi_templatedirs)
+             template_dirs=c.templates_path)

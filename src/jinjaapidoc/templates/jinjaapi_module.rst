@@ -1,1 +1,1 @@
-{% extends "package.rst" %}
+{% extends "jinjaapi_package.rst" %}

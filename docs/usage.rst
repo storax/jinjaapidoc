@@ -21,18 +21,19 @@ There are a few config values you can set. The only necessary one is the srcdir:
 
   :jinjaapi_srcdir: **REQUIRED!** the path to the source directory of your python code.
   :jinjaapi_outputdir: directory for generated files. Defaults to the documenation source directory (ussually the directory of conf.py).
-  :jinjaapi_nodelete: :class:`bool` - If False, delete the output directory first. Defaults to False
+  :jinjaapi_nodelete: :class:`bool` - If False, delete the output directory first.
+                      Defaults to False.
   :jinjaapi_exclude_paths: :class:`list` - A list of paths to exclude.
-  :jinjaapi_force: :class:`bool` - If True, overwrite existing files. Defaults to True
+  :jinjaapi_force: :class:`bool` - If True, overwrite existing files.
+                   Defaults to True.
   :jinjaapi_followlinks: :class:`bool` - If True, follow symbolic links.
-  :jinjaapi_dryrun: :class:`bool` - If True, do not create any files. Defaults to False.
+                         Defaults to True.
+  :jinjaapi_dryrun: :class:`bool` - If True, do not create any files.
+                    Defaults to False.
   :jinjaapi_includeprivate: :class:`bool` - If True, include private modules.
-  :jinjaapi_templatedirs: :class:`list` - list of directorys to search for templates.
-                          The templates used for rendering should be named like
-			  :data:`jinjaapidoc.gendoc.MODULE_TEMPLATE_NAME` and
-			  :data:`jinjaapidoc.gendoc.PACKAGE_TEMPLATE_NAME`.
-			  If no modules are found, use the default templates
-			  provided by this package.
+                            Defaults to True.
+  :jinjaapi_addsummarytemplate: :class:`bool` - If True, add autosummary template for classes.
+                                Defaults to True.
 
 Documenter
 ----------
@@ -47,7 +48,7 @@ Templates
 ---------
 
 You can use your own templates for rendering the rst files.
-Add the directory with the templates to ``jinjaapi_templatedirs`` in the ``conf.py``.
+Add the directory with the templates to ``templates_path`` in the ``conf.py``.
 You can provide a :data:`jinjaapidoc.gendoc.MODULE_TEMPLATE_NAME` and
 :data:`jinjaapidoc.gendoc.PACKAGE_TEMPLATE_NAME` template.
 
@@ -148,3 +149,49 @@ The default template looks like this::
   {% endfor %}{% endblock %}
   {% endblock %}
 
+
+Autosummary
+-----------
+
+The default templates use autosummary. Thats why autosummary will be setup automatically.
+If you already added it to your extensions, make sure it is behind jinjaapidoc.
+That way, autosummary will also consider the new generated files.
+Set `autosummary_generate` to True in your `conf.py`
+
+By default, custom autosummary templates are added. Right now, there is one for classes.
+You can set `jinjaapi_addsummarytemplate` in `conf.py` to False
+to avoid that and fall back to the default one. The template looks like this::
+
+  {{ fullname }}
+  {{ underline }}
+  
+  .. currentmodule:: {{ module }}
+  
+  .. autoclass:: {{ objname }}
+     :members:
+     :undoc-members:
+     :show-inheritance:
+  
+     {% block methods %}
+     .. automethod:: __init__
+  
+     {% if methods %}
+     .. rubric:: **Methods**
+  
+     .. autosummary::
+     {% for item in methods %}
+        ~{{ name }}.{{ item }}
+     {%- endfor %}
+     {% endif %}
+     {% endblock %}
+  
+     {% block attributes %}
+     {% if attributes %}
+     .. rubric:: **Attributes**
+  
+     .. autosummary::
+     {% for item in attributes %}
+        ~{{ name }}.{{ item }}
+     {%- endfor %}
+     {% endif %}
+     {% endblock %}

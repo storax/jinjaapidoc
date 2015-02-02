@@ -3,8 +3,8 @@ __email__ = 'zuber.david@gmx.de'
 __version__ = '0.1.0'
 
 
-import jinjaapidoc.ext
-import jinjaapidoc.updatedoc
+import jinjaapidoc.ext as ext
+import jinjaapidoc.gendoc as gendoc
 
 
 def setup(app):
@@ -24,7 +24,7 @@ def setup(app):
     app.setup_extension('sphinx.ext.autodoc')
     app.setup_extension('sphinx.ext.autosummary')
 
-    app.add_autodocumenter(jinjaapidoc.ext.ModDocstringDocumenter)
+    app.add_autodocumenter(ext.ModDocstringDocumenter)
 
     app.add_config_value('jinjaapi_outputdir', '', 'env')
     app.add_config_value('jinjaapi_nodelete', True, 'env')
@@ -32,9 +32,9 @@ def setup(app):
     app.add_config_value('jinjaapi_exclude_paths', [], 'env')
     app.add_config_value('jinjaapi_force', True, 'env')
     app.add_config_value('jinjaapi_followlinks', True, 'env')
-    app.add_config_value('jinjaapi_dryrun', True, 'env')
-    app.add_config_value('jinjaapi_private', True, 'env')
+    app.add_config_value('jinjaapi_dryrun', False, 'env')
+    app.add_config_value('jinjaapi_includeprivate', True, 'env')
     app.add_config_value('jinjaapi_templatedirs', [], 'env')
 
-    app.connect('builder-inited', jinjaapidoc.updatedoc.main)
-    return {'version': jinjaapidoc.__version__, 'parallel_read_safe': True}
+    app.connect('builder-inited', gendoc.main)
+    return {'version': __version__, 'parallel_read_safe': True}

@@ -41,7 +41,7 @@ tests_require = ['pytest']
 
 setup(
     name='jinjaapidoc',
-    version='0.2.0',
+    version='0.2.1',
     description='Sphinx API Doc with Jinja2 templates',
     long_description=long_description,
     author='David Zuber',

@@ -13,3 +13,8 @@ History
 
 * Add autosummary template
 
+0.2.1 (2015-03-11)
++++++++++++++++++++++++++++++++++++++++
+
+* Support Sphinx 1.3
+* Fix recursion

@@ -24,7 +24,7 @@ exclude_patterns = []
 
 pygments_style = 'sphinx'
 
-html_theme = 'default'
+html_theme = 'classic'
 
 html_static_path = ['_static']
 

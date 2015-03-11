@@ -447,7 +447,7 @@ def recurse_tree(app, env, src, dest, excludes, followlinks, force, dryrun, priv
         elif root != src:
             # only accept non-package at toplevel
             del subs[:]
-            return
+            continue
         # remove hidden ('.') and private ('_') directories, as well as
         # excluded dirs
         if private:
@@ -552,6 +552,9 @@ def main(app):
     if not src:
         return
 
+    # for Sphinx 1.3
+    suffix = c.source_suffix[0] if isinstance(c.source_suffix, list) else c.source_suffix
+
     out = c.jinjaapi_outputdir or app.env.srcdir
 
     if c.jinjaapi_addsummarytemplate:
@@ -568,5 +571,5 @@ def main(app):
              followlinks=c.jinjaapi_followlinks,
              dryrun=c.jinjaapi_dryrun,
              private=c.jinjaapi_includeprivate,
-             suffix=c.source_suffix,
+             suffix=suffix,
              template_dirs=c.templates_path)

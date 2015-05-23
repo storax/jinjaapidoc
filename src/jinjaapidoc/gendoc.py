@@ -181,9 +181,9 @@ def get_members(app, mod, typ, include_public=None):
     :raises: None
     """
     include_public = include_public or []
-    tests = {'class': lambda x: inspect.isclass(x) and not issubclass(x, BaseException),
-             'function': lambda x: inspect.isfunction(x),
-             'exception': lambda x: inspect.isclass(x) and issubclass(x, BaseException),
+    tests = {'class': lambda x: inspect.isclass(x) and not issubclass(x, BaseException) and x.__module__ == mod.__name__,
+             'function': lambda x: inspect.isfunction(x) and x.__module__ == mod.__name__,
+             'exception': lambda x: inspect.isclass(x) and issubclass(x, BaseException) and x.__module__ == mod.__name__,
              'data': lambda x: not inspect.ismodule(x) and not inspect.isclass(x) and not inspect.isfunction(x),
              'members': lambda x: True}
     items = []

@@ -37,7 +37,7 @@ There are a few config values you can set. The only necessary one is the srcdir:
   :jinjaapi_srcdir: **REQUIRED!** the path to the source directory of your python code.
   :jinjaapi_outputdir: directory for generated files. Defaults to the documenation source directory (ussually the directory of conf.py).
   :jinjaapi_nodelete: :class:`bool` - If False, delete the output directory first.
-                      Defaults to False.
+                      Defaults to True.
   :jinjaapi_exclude_paths: :class:`list` - A list of paths to exclude.
   :jinjaapi_force: :class:`bool` - If True, overwrite existing files.
                    Defaults to True.

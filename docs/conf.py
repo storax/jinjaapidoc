@@ -275,8 +275,8 @@ autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance']
 
 
 # -- Intersphinx Config ---------------------------------------------------
-intersphinx_mapping = {'python': ('http://docs.python.org/2.7', None),
-                       'sphinx': ('http://sphinx-doc.org', None),
+intersphinx_mapping = {'python': ('https://docs.python.org/2.7', None),
+                       'sphinx': ('http://www.sphinx-doc.org/en/stable/', None),
                        'jinja2': ('http://jinja.pocoo.org/docs/dev/', None)}
 
 autosummary_generate = True

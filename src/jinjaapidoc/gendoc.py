@@ -215,7 +215,7 @@ def _get_submodules(app, module):
             p = module.__path__
         else:
             return []
-    elif isinstance(module, basestring):
+    elif isinstance(module, str):
         p = module
     else:
         raise TypeError("Only Module or String accepted. %s given." % type(module))
@@ -454,8 +454,8 @@ def recurse_tree(app, env, src, dest, excludes, followlinks, force, dryrun, priv
             exclude_prefixes = ('.',)
         else:
             exclude_prefixes = ('.', '_')
-        subs[:] = sorted(sub for sub in subs if not sub.startswith(exclude_prefixes)
-                         and not is_excluded(os.path.join(root, sub), excludes))
+        subs[:] = sorted(sub for sub in subs if not sub.startswith(exclude_prefixes) and not
+                         is_excluded(os.path.join(root, sub), excludes))
         if is_pkg:
             # we are in a package with something to document
             if subs or len(py_files) > 1 or not \

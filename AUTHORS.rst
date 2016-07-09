@@ -5,9 +5,12 @@ Credits
 Development Lead
 ----------------
 
-* David Zuber <zuber.david@gmx.de>
+* David Zuber (`@storax`_)
 
 Contributors
 ------------
 
-None yet. Why not be the first?
+* Ashley Whetter (`@awhetter`_)
+
+.. _`@awhetter`: https://github.com/awhetter
+.. _`@storax`: https://github.com/storax

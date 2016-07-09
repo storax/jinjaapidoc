@@ -3,7 +3,7 @@ import jinjaapidoc.gendoc as gendoc
 
 __author__ = 'David Zuber'
 __email__ = 'zuber.david@gmx.de'
-__version__ = '0.3.2'
+__version__ = '0.4.0'
 
 
 def setup(app):
@@ -37,5 +37,6 @@ def setup(app):
     app.add_config_value('jinjaapi_dryrun', False, 'env')
     app.add_config_value('jinjaapi_includeprivate', True, 'env')
     app.add_config_value('jinjaapi_addsummarytemplate', True, 'env')
+    app.add_config_value('jinjaapi_include_from_all', True, 'env')
 
     return {'version': __version__, 'parallel_read_safe': True}

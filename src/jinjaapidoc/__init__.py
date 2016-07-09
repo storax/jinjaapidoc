@@ -37,5 +37,6 @@ def setup(app):
     app.add_config_value('jinjaapi_dryrun', False, 'env')
     app.add_config_value('jinjaapi_includeprivate', True, 'env')
     app.add_config_value('jinjaapi_addsummarytemplate', True, 'env')
+    app.add_config_value('jinjaapi_include_from_all', True, 'env')
 
     return {'version': __version__, 'parallel_read_safe': True}

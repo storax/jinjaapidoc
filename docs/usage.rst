@@ -49,7 +49,7 @@ There are a few config values you can set. The only necessary one is the srcdir:
                             Defaults to True.
   :jinjaapi_addsummarytemplate: :class:`bool` - If True, add autosummary template for classes.
                                 Defaults to True.
-  :jinjaapi_include_from_all: :class:`bool` - If True, include members of a module or package that are listed in `__all__`.
+  :jinjaapi_include_from_all: :class:`bool` - If True, include members of a module or package that are listed in ``__all__``.
                                 Defaults to True.
 
 Documenter

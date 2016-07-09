@@ -23,3 +23,12 @@ History
 +++++++++++++++++++++++++++++++++++++++
 
 * Ignore classes and functions that got imported from other modules
+
+0.4.0 (2016-07-09)
++++++++++++++++++++++++++++++++++++++++
+
+* Add ``jinjaapi_include_from_all`` option to include members of a module or package
+  that are listed in ``__all__`` (`#9 <https://github.com/storax/jinjaapidoc/pull/9>`_).
+  Thanks to `@awhetter`_.
+
+.. _`@awhetter`: https://github.com/awhetter

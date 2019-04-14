@@ -457,7 +457,7 @@ def recurse_tree(app, env, src, dest, excludes, followlinks, force, dryrun, priv
     for root, subs, files in walk(src, followlinks=followlinks):
         # document only Python module files (that aren't excluded)
         py_files = sorted(f for f in files
-                          if os.path.splitext(f)[1] in PY_SUFFIXES and \
+                          if os.path.splitext(f)[1] in PY_SUFFIXES and  # noqa: W504
                           not is_excluded(os.path.join(root, f), excludes))
         is_pkg = INITPY in py_files
         if is_pkg:

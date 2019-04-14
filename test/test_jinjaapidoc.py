@@ -25,7 +25,7 @@ def fix_doc(request):
     request.addfinalizer(fin)
 
 
-def test_buid(fix_doc):
+def test_build(fix_doc):
     docdir = os.path.join(here, 'testdoc')
     out = os.path.join(docdir, 'build')
     src = os.path.join(docdir, 'source')

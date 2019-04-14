@@ -31,4 +31,10 @@ History
   that are listed in ``__all__`` (`#9 <https://github.com/storax/jinjaapidoc/pull/9>`_).
   Thanks to `@awhetter`_.
 
+0.5.0 (2019-04-14)
++++++++++++++++++++++++++++++++++++++++
+
+* Fix compatibility with Sphinx >= 1.8.
+* Remove Python 2 tests.
+
 .. _`@awhetter`: https://github.com/awhetter

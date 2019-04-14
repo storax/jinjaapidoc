@@ -18,8 +18,10 @@ import shutil
 
 import jinja2
 from sphinx.util.osutil import walk
+from sphinx.util import logging
 from sphinx.ext import autosummary
 
+logger = logging.getLogger(__name__)
 
 INITPY = '__init__.py'
 PY_SUFFIXES = set(['.py', '.pyx'])
@@ -46,15 +48,15 @@ def prepare_dir(app, directory, delete=False):
     :rtype: None
     :raises: None
     """
-    app.info("Preparing output directories for jinjaapidoc.")
+    logger.info("Preparing output directories for jinjaapidoc.")
     if os.path.exists(directory):
         if delete:
-            app.debug("Deleting dir %s", directory)
+            logger.debug("Deleting dir %s", directory)
             shutil.rmtree(directory)
-            app.debug("Creating dir %s", directory)
+            logger.debug("Creating dir %s", directory)
             os.mkdir(directory)
     else:
-        app.debug("Creating %s", directory)
+        logger.debug("Creating %s", directory)
         os.mkdir(directory)
 
 
@@ -128,12 +130,12 @@ def write_file(app, name, text, dest, suffix, dryrun, force):
     """
     fname = os.path.join(dest, '%s.%s' % (name, suffix))
     if dryrun:
-        app.info('Would create file %s.' % fname)
+        logger.info('Would create file %s.' % fname)
         return
     if not force and os.path.isfile(fname):
-        app.info('File %s already exists, skipping.' % fname)
+        logger.info('File %s already exists, skipping.' % fname)
     else:
-        app.info('Creating file %s.' % fname)
+        logger.info('Creating file %s.' % fname)
         f = open(fname, 'w')
         try:
             f.write(text)
@@ -141,7 +143,7 @@ def write_file(app, name, text, dest, suffix, dryrun, force):
             abspath = os.sep + relpath
             docpath = app.env.relfn2path(abspath)[0]
             docpath = docpath.rsplit(os.path.extsep, 1)[0]
-            app.debug2('Adding document %s' % docpath)
+            logger.debug('Adding document %s' % docpath)
             app.env.found_docs.add(docpath)
         finally:
             f.close()
@@ -157,12 +159,12 @@ def import_name(app, name):
     :raises: None
     """
     try:
-        app.debug2('Importing %r', name)
+        logger.debug('Importing %r', name)
         name, obj = autosummary.import_by_name(name)[:2]
-        app.debug2('Imported %s', obj)
+        logger.debug('Imported %s', obj)
         return obj
     except ImportError as e:
-        app.warn("Jinjapidoc failed to import %r: %s", name, e)
+        logger.warn("Jinjapidoc failed to import %r: %s", name, e)
 
 
 def get_members(app, mod, typ, include_public=None):
@@ -192,8 +194,7 @@ def get_members(app, mod, typ, include_public=None):
         :returns: True if the member should be included in mod. False otherwise.
         :rtype: bool
         """
-        return (x.__module__ == mod.__name__ or
-                (include_from_all and x.__name__ in all_list))
+        return (x.__module__ == mod.__name__ or (include_from_all and x.__name__ in all_list))
 
     all_list = getattr(mod, '__all__', [])
     include_from_all = app.config.jinjaapi_include_from_all
@@ -213,7 +214,7 @@ def get_members(app, mod, typ, include_public=None):
             items.append(name)
     public = [x for x in items
               if x in include_public or not x.startswith('_')]
-    app.debug2('Got members of %s of type %s: public %s and %s', mod, typ, public, items)
+    logger.debug('Got members of %s of type %s: public %s and %s', mod, typ, public, items)
     return public, items
 
 
@@ -237,10 +238,10 @@ def _get_submodules(app, module):
         p = module
     else:
         raise TypeError("Only Module or String accepted. %s given." % type(module))
-    app.debug2('Getting submodules of %s', p)
-    l = [(name, ispkg) for loader, name, ispkg in pkgutil.iter_modules(p)]
-    app.debug2('Found submodules of %s: %s', module, l)
-    return l
+    logger.debug('Getting submodules of %s', p)
+    submodules = [(name, ispkg) for loader, name, ispkg in pkgutil.iter_modules(p)]
+    logger.debug('Found submodules of %s: %s', module, submodules)
+    return submodules
 
 
 def get_submodules(app, module):
@@ -254,8 +255,8 @@ def get_submodules(app, module):
     :rtype: list
     :raises: TypeError
     """
-    l = _get_submodules(app, module)
-    return [name for name, ispkg in l if not ispkg]
+    submodules = _get_submodules(app, module)
+    return [name for name, ispkg in submodules if not ispkg]
 
 
 def get_subpackages(app, module):
@@ -269,8 +270,8 @@ def get_subpackages(app, module):
     :rtype: list
     :raises: TypeError
     """
-    l = _get_submodules(app, module)
-    return [name for name, ispkg in l if ispkg]
+    submodules = _get_submodules(app, module)
+    return [name for name, ispkg in submodules if ispkg]
 
 
 def get_context(app, package, module, fullname):
@@ -309,7 +310,7 @@ def get_context(app, package, module, fullname):
     var = {'package': package,
            'module': module,
            'fullname': fullname}
-    app.debug2('Creating context for: package %s, module %s, fullname %s', package, module, fullname)
+    logger.debug('Creating context for: package %s, module %s, fullname %s', package, module, fullname)
     obj = import_name(app, fullname)
     if not obj:
         for k in ('subpkgs', 'submods', 'classes', 'allclasses',
@@ -325,7 +326,7 @@ def get_context(app, package, module, fullname):
     var['functions'], var['allfunctions'] = get_members(app, obj, 'function')
     var['data'], var['alldata'] = get_members(app, obj, 'data')
     var['members'] = get_members(app, obj, 'members')
-    app.debug2('Created context: %s', var)
+    logger.debug('Created context: %s', var)
     return var
 
 
@@ -351,7 +352,7 @@ def create_module_file(app, env, package, module, dest, suffix, dryrun, force):
     :returns: None
     :raises: None
     """
-    app.debug('Create module file: package %s, module %s', package, module)
+    logger.debug('Create module file: package %s, module %s', package, module)
     template_file = MODULE_TEMPLATE_NAME
     template = env.get_template(template_file)
     fn = makename(package, module)
@@ -386,7 +387,7 @@ def create_package_file(app, env, root_package, sub_package, private,
     :returns: None
     :raises: None
     """
-    app.debug('Create package file: rootpackage %s, sub_package %s', root_package, sub_package)
+    logger.debug('Create package file: rootpackage %s, sub_package %s', root_package, sub_package)
     template_file = PACKAGE_TEMPLATE_NAME
     template = env.get_template(template_file)
     fn = makename(root_package, sub_package)
@@ -410,13 +411,13 @@ def shall_skip(app, module, private):
     :param private: True, if privates are allowed
     :type private: :class:`bool`
     """
-    app.debug2('Testing if %s should be skipped.', module)
+    logger.debug('Testing if %s should be skipped.', module)
     # skip if it has a "private" name and this is selected
     if module != '__init__.py' and module.startswith('_') and \
        not private:
-        app.debug2('Skip %s because its either private or __init__.', module)
+        logger.debug('Skip %s because its either private or __init__.', module)
         return True
-    app.debug2('Do not skip %s', module)
+    logger.debug('Do not skip %s', module)
     return False
 
 
@@ -456,7 +457,7 @@ def recurse_tree(app, env, src, dest, excludes, followlinks, force, dryrun, priv
     for root, subs, files in walk(src, followlinks=followlinks):
         # document only Python module files (that aren't excluded)
         py_files = sorted(f for f in files
-                          if os.path.splitext(f)[1] in PY_SUFFIXES and
+                          if os.path.splitext(f)[1] in PY_SUFFIXES and \
                           not is_excluded(os.path.join(root, f), excludes))
         is_pkg = INITPY in py_files
         if is_pkg:
@@ -570,8 +571,7 @@ def main(app):
     if not src:
         return
 
-    # for Sphinx 1.3
-    suffix = c.source_suffix[0] if isinstance(c.source_suffix, list) else c.source_suffix
+    suffix = "rst"
 
     out = c.jinjaapi_outputdir or app.env.srcdir
 

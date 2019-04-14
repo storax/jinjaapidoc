@@ -35,13 +35,13 @@ class PyTest(TestCommand):
 
 
 long_description = read('README.rst', 'HISTORY.rst')
-install_requires = ['jinja2', 'sphinx']
+install_requires = ['jinja2', 'sphinx>=1.8.5']
 tests_require = ['pytest']
 
 
 setup(
     name='jinjaapidoc',
-    version='0.4.0',
+    version='0.5.0',
     description='Sphinx API Doc with Jinja2 templates',
     long_description=long_description,
     author='David Zuber',
@@ -69,10 +69,8 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Documentation :: Sphinx',
         'Framework :: Sphinx :: Extension',
     ],
